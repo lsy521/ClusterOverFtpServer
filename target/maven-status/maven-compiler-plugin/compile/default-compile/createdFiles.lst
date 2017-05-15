@@ -1,0 +1,8 @@
+com\hzgc\ftpserver\hdfs\HdfsOverFtpSystem.class
+com\hzgc\ftpserver\common\ClusterOverFtpServer.class
+com\hzgc\ftpserver\hdfs\HdfsFileSystemView.class
+com\hzgc\ftpserver\hdfs\HdfsFileSystemManager.class
+com\hzgc\ftpserver\hdfs\HdfsUser.class
+com\hzgc\ftpserver\hdfs\HdfsSslConfiguration.class
+com\hzgc\ftpserver\hdfs\HdfsFileObject.class
+com\hzgc\ftpserver\hdfs\HdfsUserManager.class
