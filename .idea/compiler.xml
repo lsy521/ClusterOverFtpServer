@@ -6,13 +6,11 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="ClusterOverFtpServer" />
-        <module name="Kafka-FtpServer" />
+        <module name="ftpserver" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
-      <module name="ClusterOverFtpServer" target="1.5" />
-      <module name="Kafka-FtpServer" target="1.5" />
+      <module name="ftpserver" target="1.5" />
     </bytecodeTargetLevel>
   </component>
 </project>
