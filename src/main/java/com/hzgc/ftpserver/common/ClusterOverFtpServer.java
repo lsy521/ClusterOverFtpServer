@@ -1,5 +1,7 @@
 package com.hzgc.ftpserver.common;
 
+import org.apache.ftpserver.DataConnectionConfiguration;
+import org.apache.ftpserver.DataConnectionConfigurationFactory;
 import org.apache.log4j.Logger;
 
 import java.io.File;
@@ -17,10 +19,12 @@ public class ClusterOverFtpServer {
     private static String sslPassivePorts = null;
     private static String hdfsUri = null;
 
+    private static DataConnectionConfigurationFactory dataConnConf;
+
     private static File loadResource(String resourceName) {
         final URL resource = ClusterOverFtpServer.class.getResource(resourceName);
         if (resource == null) {
-            log.error("Please check to see if there are any \"./conf/hdfs-over-ftp.properties\"");
+            log.error("Please check to see if there are any \"./conf/cluster-over-ftp.properties\"");
             System.exit(1);
         }
         return new File(resource.getFile());
@@ -28,20 +32,22 @@ public class ClusterOverFtpServer {
 
     private static void loadConfig() throws IOException {
         Properties props = new Properties();
-        props.load(new FileInputStream(loadResource("/conf/hdfs-over-ftp.properties")));
+        props.load(new FileInputStream(loadResource("/cluster-over-ftp.properties")));
 
         try {
             port = Integer.parseInt(props.getProperty("port"));
-            log.info("port is set. ftp server will be started");
+            checkPort(port, "ftpserver port");
+            log.info("The port:" + port + " for ftpserver is already set, FtpServer will be started");
         } catch (Exception e) {
-            log.info("port is not set. so ftp server will not be started");
+            log.info("The port for ftpserver is not set, Check that the FTP port is set");
+            System.exit(1);
         }
 
         try {
             sslPort = Integer.parseInt(props.getProperty("ssl-port"));
-            log.info("ssl-port is set. ssl server will be started");
+            log.warn("The port:" + sslPort +" for SSL is already set. SSL server will be started");
         } catch (Exception e) {
-            log.info("ssl-port is not set. so ssl server will not be started");
+            log.warn("The port for SSL is not set, so SSL server is not applicable");
         }
 
         if (port != 0) {
@@ -72,6 +78,20 @@ public class ClusterOverFtpServer {
             System.exit(1);
         }
     }
+
+    public static void startFtpServer() throws Exception {
+        dataConnConf = new DataConnectionConfigurationFactory();
+
+    }
+
+    public static void checkPort(int checkPort, String server) throws Exception {
+        if (checkPort != 0 && checkPort > 0) {
+            startFtpServer();
+        } else {
+            log.error(" The port settings for " + server +" are illegal and must be greater than 1024 ");
+        }
+    }
+
     public static void main(String args[]) throws Exception {
         loadConfig();
     }
