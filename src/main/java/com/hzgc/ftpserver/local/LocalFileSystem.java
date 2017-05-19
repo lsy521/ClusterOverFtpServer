@@ -1,12 +1,9 @@
-package com.hzgc.ftpserver.common;
+package com.hzgc.ftpserver.local;
 
 import org.apache.ftpserver.filesystem.nativefs.impl.NativeFtpFile;
 import org.apache.ftpserver.ftplet.FtpFile;
 import org.apache.ftpserver.ftplet.User;
 import org.apache.ftpserver.usermanager.impl.WriteRequest;
-import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,7 +11,7 @@ import java.io.*;
 import java.util.List;
 
 
-public class CustomerNativeObject implements FtpFile{
+public class LocalFileSystem implements FtpFile{
     private final Logger log = LoggerFactory.getLogger(NativeFtpFile.class);
 
     // the file name with respect to the user root.
@@ -26,7 +23,7 @@ public class CustomerNativeObject implements FtpFile{
 
     private User user;
 
-    protected CustomerNativeObject(final String fileName, final File file, final User user) {
+    protected LocalFileSystem(final String fileName, final File file, final User user) {
         if (fileName == null) {
             throw new IllegalArgumentException("fileName can not be null");
         }
@@ -129,7 +126,7 @@ public class CustomerNativeObject implements FtpFile{
         }
 
         // we check if the parent FileObject is writable.
-        CustomerNativeObject parentObject = new CustomerNativeObject(parentFullName, file
+        LocalFileSystem parentObject = new LocalFileSystem(parentFullName, file
                 .getAbsoluteFile().getParentFile(), user);
         return parentObject.isWritable();
     }
@@ -177,7 +174,7 @@ public class CustomerNativeObject implements FtpFile{
     public boolean move(FtpFile destination) {
         boolean retVal = false;
         if (destination.isWritable() && isReadable()) {
-            File destFile = ((CustomerNativeObject) destination).file;
+            File destFile = ((LocalFileSystem) destination).file;
 
             if (destFile.exists()) {
                 // renameTo behaves differently on different platforms

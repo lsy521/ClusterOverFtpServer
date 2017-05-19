@@ -1,4 +1,4 @@
-package com.hzgc.ftpserver.common;
+package com.hzgc.ftpserver.core;
 
 /**
  * Created by Administrator on 2017-5-15.

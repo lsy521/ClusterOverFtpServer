@@ -59,7 +59,7 @@
                     </descriptors>
                     <archive>
                         <manifest>
-                            <mainClass>com.hzgc.ftpserver.common.ClusterOverFtpServer</mainClass>
+                            <mainClass>com.hzgc.ftpserver.core.ClusterOverFtpServer</mainClass>
                         </manifest>
                     </archive>
                 </configuration>

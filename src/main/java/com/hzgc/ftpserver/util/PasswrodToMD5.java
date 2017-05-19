@@ -1,4 +1,4 @@
-package com.hzgc.ftpserver.common;
+package com.hzgc.ftpserver.util;
 
 import org.apache.ftpserver.util.EncryptUtils;
 
