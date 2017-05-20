@@ -1,4 +1,4 @@
-package com.hzgc.ftpserver.core;
+package com.hzgc.ftpserver.local;
 
 import org.apache.ftpserver.DataConnectionConfigurationFactory;
 import org.apache.ftpserver.FtpServer;
@@ -14,8 +14,8 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Properties;
 
-public class ClusterOverFtpServer {
-    private static Logger log = Logger.getLogger(ClusterOverFtpServer.class);
+public class LocalOverFtpServer {
+    private static Logger log = Logger.getLogger(LocalOverFtpServer.class);
 
     private static int listenerPort = 0;
 //    private static int sslPort = 0;
@@ -27,7 +27,7 @@ public class ClusterOverFtpServer {
     private static DataConnectionConfigurationFactory dataConnConf;
 
     private static File loadResource(String resourceName) {
-        URL resource = ClusterOverFtpServer.class.getResource(resourceName);
+        URL resource = LocalOverFtpServer.class.getResource(resourceName);
         if (resource == null) {
             log.error(" Please check to see if there are any " + resourceName);
             System.exit(1);
@@ -38,7 +38,7 @@ public class ClusterOverFtpServer {
     private static void loadConfig() throws IOException {
         Properties props = new Properties();
         dataConnConf = new DataConnectionConfigurationFactory();
-        props.load(new FileInputStream(loadResource("/conf/cluster-over-ftp.properties")));
+        props.load(new FileInputStream(loadResource("/conf/local-over-ftp.properties")));
 
         try {
             listenerPort = Integer.parseInt(props.getProperty("listener-port"));
@@ -89,17 +89,17 @@ public class ClusterOverFtpServer {
             }
         }
 
-        hdfsUri = props.getProperty("hdfs-url");
-        if (hdfsUri == null) {
-            log.error(" The hdfs url is not set, this is important ");
-            System.exit(1);
-        }
-
-        String superuser = props.getProperty("superuser");
-        if (superuser == null) {
-            log.error(" The superuser is not set, please check it ");
-            System.exit(1);
-        }
+//        hdfsUri = props.getProperty("hdfs-url");
+//        if (hdfsUri == null) {
+//            log.error(" The hdfs url is not set, this is important ");
+//            System.exit(1);
+//        }
+//
+//        String superuser = props.getProperty("superuser");
+//        if (superuser == null) {
+//            log.error(" The superuser is not set, please check it ");
+//            System.exit(1);
+//        }
     }
 
     private static void startFtpServer() throws Exception {
@@ -110,8 +110,8 @@ public class ClusterOverFtpServer {
 //        listenerFactory.setServerAddress("192.168.2.130");
 
         if ("true".equals(implicitSsl)) {
-            //URL jksResource = ClusterOverFtpServer.class.getResource("/conf/ftpserver.jks");
-            //URL userProperResource = ClusterOverFtpServer.class.getResource("/conf/users.properties");
+            //URL jksResource = LocalOverFtpServer.class.getResource("/conf/ftpserver.jks");
+            //URL userProperResource = LocalOverFtpServer.class.getResource("/conf/users.properties");
 
             SslConfigurationFactory sslFactory = new SslConfigurationFactory();
             sslFactory.setKeystoreFile(loadResource("/conf/ftpserver.jks"));
@@ -125,6 +125,9 @@ public class ClusterOverFtpServer {
         PropertiesUserManagerFactory userManagerFactory = new PropertiesUserManagerFactory();
         userManagerFactory.setFile(loadResource("/conf/users.properties"));
         serverFactory.setUserManager(userManagerFactory.createUserManager());
+
+        LocalCmdFactoryFactory cmdFactoryFactory = new LocalCmdFactoryFactory();
+        serverFactory.setCommandFactory(cmdFactoryFactory.createCommandFactory());
 //        serverFactory.setFileSystem();
         //start the server
         FtpServer server = serverFactory.createServer();
