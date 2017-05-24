@@ -41,7 +41,7 @@ public class LocalIODataConnection implements DataConnection{
     /**
      * Get data input stream. The return value will never be null.
      */
-    protected InputStream getDataInputStream() throws IOException {
+    public InputStream getDataInputStream() throws IOException {
         try {
 
             // get data socket

@@ -1,6 +1,7 @@
 package com.hzgc.ftpserver.local;
 
 
+import com.hzgc.ftpserver.util.Utiles;
 import org.apache.ftpserver.command.AbstractCommand;
 import org.apache.ftpserver.command.impl.STOR;
 import org.apache.ftpserver.ftplet.*;
@@ -69,7 +70,7 @@ public class LocalSTOR extends AbstractCommand{
             try {
                 file = session.getFileSystemView().getFile(fileName);
             } catch (Exception ex) {
-                LOG.debug("Exception getting file object", ex);
+                LOG.info("Exception getting file object", ex);
             }
             if (file == null) {
                 session.write(LocalizedFtpReply.translate(session, request, context,
@@ -93,12 +94,12 @@ public class LocalSTOR extends AbstractCommand{
                             FtpReply.REPLY_150_FILE_STATUS_OKAY, "STOR",
                             fileName)).awaitUninterruptibly(10000);
 
-            DataConnection dataConnection;
+            LocalIODataConnection dataConnection;
             try {
                 IODataConnectionFactory customConnFactory = (IODataConnectionFactory)session.getDataConnection();
                 dataConnection = new LocalIODataConnection(customConnFactory.createDataSocket(), customConnFactory.getSession(), customConnFactory);
             } catch (Exception e) {
-                LOG.debug("Exception getting the input data stream", e);
+                LOG.info("Exception getting the input data stream", e);
                 session.write(LocalizedFtpReply.translate(session, request, context,
                         FtpReply.REPLY_425_CANT_OPEN_DATA_CONNECTION, "STOR",
                         fileName));
@@ -110,6 +111,8 @@ public class LocalSTOR extends AbstractCommand{
             OutputStream outStream = null;
             try {
                 outStream = file.createOutputStream(skipLen);
+                String jasonStr = Utiles.loadJsonFile(dataConnection.getDataInputStream());
+                Utiles.analysisJsonFile(jasonStr);
                 long transSz = dataConnection.transferFromClient(session.getFtpletSession(), outStream);
                 // attempt to close the output stream so that errors in
                 // closing it will return an error to the client (FTPSERVER-119)
@@ -125,13 +128,13 @@ public class LocalSTOR extends AbstractCommand{
                 ftpStat.setUpload(session, file, transSz);
 
             } catch (SocketException ex) {
-                LOG.debug("Socket exception during data transfer", ex);
+                LOG.info("Socket exception during data transfer", ex);
                 failure = true;
                 session.write(LocalizedFtpReply.translate(session, request, context,
                         FtpReply.REPLY_426_CONNECTION_CLOSED_TRANSFER_ABORTED,
                         "STOR", fileName));
             } catch (IOException ex) {
-                LOG.debug("IOException during data transfer", ex);
+                LOG.info("IOException during data transfer", ex);
                 failure = true;
                 session
                         .write(LocalizedFtpReply
@@ -156,18 +159,6 @@ public class LocalSTOR extends AbstractCommand{
         } finally {
             session.resetState();
             session.getDataConnection().closeDataConnection();
-        }
-    }
-    public synchronized ServerDataConnectionFactory getDataConnection(FtpIoSession session, FtpServerContext context) throws Exception {
-        if (session.containsAttribute(ATTRIBUTE_DATA_CONNECTION)) {
-            return (ServerDataConnectionFactory) session.getAttribute(ATTRIBUTE_DATA_CONNECTION);
-        } else {
-            LocalIODataConnectionFactory dataCon = new LocalIODataConnectionFactory(context, session);
-            dataCon.setServerControlAddress(((InetSocketAddress) session.getLocalAddress())
-                            .getAddress());
-            session.setAttribute(ATTRIBUTE_DATA_CONNECTION, dataCon);
-
-            return dataCon;
         }
     }
 }

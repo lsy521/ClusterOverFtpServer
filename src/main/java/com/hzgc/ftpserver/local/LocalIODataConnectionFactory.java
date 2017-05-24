@@ -126,7 +126,7 @@ public class LocalIODataConnectionFactory implements ServerDataConnectionFactory
      */
     public synchronized InetSocketAddress initPassiveDataConnection()
             throws DataConnectionException {
-        LOG.debug("Initiating passive data connection");
+        LOG.info("Initiating passive data connection");
         // close old sockets if any
         closeDataConnection();
 
@@ -154,7 +154,7 @@ public class LocalIODataConnectionFactory implements ServerDataConnectionFactory
 
             if (secure) {
                 LOG
-                        .debug(
+                        .info(
                                 "Opening SSL passive data connection on address \"{}\" and port {}",
                                 address, passivePort);
                 SslConfiguration ssl = getSslConfiguration();
@@ -169,17 +169,17 @@ public class LocalIODataConnectionFactory implements ServerDataConnectionFactory
                 // ServerSocket that will be wrapped as a SSL socket in createDataSocket()
                 servSoc = new ServerSocket(passivePort, 0, address);
                 LOG
-                        .debug(
+                        .info(
                                 "SSL Passive data connection created on address \"{}\" and port {}",
                                 address, passivePort);
             } else {
                 LOG
-                        .debug(
+                        .info(
                                 "Opening passive data connection on address \"{}\" and port {}",
                                 address, passivePort);
                 servSoc = new ServerSocket(passivePort, 0, address);
                 LOG
-                        .debug(
+                        .info(
                                 "Passive data connection created on address \"{}\" and port {}",
                                 address, passivePort);
             }
@@ -239,7 +239,7 @@ public class LocalIODataConnectionFactory implements ServerDataConnectionFactory
         try {
             if (!passive) {
                 if (secure) {
-                    LOG.debug("Opening secure active data connection");
+                    LOG.info("Opening secure active data connection");
                     SslConfiguration ssl = getSslConfiguration();
                     if (ssl == null) {
                         throw new FtpException(
@@ -260,7 +260,7 @@ public class LocalIODataConnectionFactory implements ServerDataConnectionFactory
                     }
                     dataSoc = ssoc;
                 } else {
-                    LOG.debug("Opening active data connection");
+                    LOG.info("Opening active data connection");
                     dataSoc = new Socket();
                 }
 
@@ -276,14 +276,14 @@ public class LocalIODataConnectionFactory implements ServerDataConnectionFactory
 
                 SocketAddress localSocketAddress = new InetSocketAddress(localAddr, dataConfig.getActiveLocalPort());
 
-                LOG.debug("Binding active data connection to {}", localSocketAddress);
+                LOG.info("Binding active data connection to {}", localSocketAddress);
                 dataSoc.bind(localSocketAddress);
 
                 dataSoc.connect(new InetSocketAddress(address, port));
             } else {
 
                 if (secure) {
-                    LOG.debug("Opening secure passive data connection");
+                    LOG.info("Opening secure passive data connection");
                     // this is where we wrap the unsecured socket as a SSLSocket. This is
                     // due to the JVM bug described in FTPSERVER-241.
 
@@ -321,7 +321,7 @@ public class LocalIODataConnectionFactory implements ServerDataConnectionFactory
 
                     dataSoc = sslSocket;
                 } else {
-                    LOG.debug("Opening passive data connection");
+                    LOG.info("Opening passive data connection");
 
                     dataSoc = servSoc.accept();
                 }
@@ -329,7 +329,7 @@ public class LocalIODataConnectionFactory implements ServerDataConnectionFactory
                         .getDataConnectionConfiguration();
 
                 dataSoc.setSoTimeout(dataCfg.getIdleTime() * 1000);
-                LOG.debug("Passive data connection opened");
+                LOG.info("Passive data connection opened");
             }
         } catch (Exception ex) {
             closeDataConnection();
