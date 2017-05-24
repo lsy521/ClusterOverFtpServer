@@ -49,12 +49,12 @@ public class Utils {
 
 
     public static String loadJsonFile(InputStream is) {
-        BufferedInputStream bis;
+//        BufferedInputStream bis;
         BufferedReader reader = null;
         StringBuilder strBuff = new StringBuilder();
         try {
-            bis = (BufferedInputStream) is;
-            InputStreamReader isr = new InputStreamReader(bis, "UTF-8");
+//            bis = new BufferedInputStream(is);
+            InputStreamReader isr = new InputStreamReader(is, "UTF-8");
             reader = new BufferedReader(isr);
             String tempStr;
             while ((tempStr = reader.readLine()) != null) {
@@ -86,5 +86,27 @@ public class Utils {
                 System.out.println(key + "=" + value);
             }
         }
+    }
+
+    public static ByteArrayOutputStream inputStreamCacher(InputStream is){
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ByteArrayInputStream bais = null;
+        byte[] buffer = new byte[4096];
+        int len;
+        try {
+            while((len = is.read(buffer)) > -1) {
+                baos.write(buffer, 0, len);
+            }
+            baos.flush();
+        } catch (IOException e) {
+            log.error(e.getMessage(), e);
+        } finally {
+            try {
+                baos.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return baos;
     }
 }

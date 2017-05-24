@@ -10,10 +10,7 @@ import org.apache.ftpserver.util.IoUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.InetAddress;
 import java.net.SocketException;
 
@@ -110,14 +107,23 @@ public class LocalSTOR extends AbstractCommand{
             OutputStream outStream = null;
             try {
                 outStream = file.createOutputStream(skipLen);
-                InputStream is = dataConnection.getDataInputStream();
+                ByteArrayOutputStream baos = null;
+                ByteArrayInputStream bais = null;
+                long transSz;
                 //parsing JSON files
                 if (file.getName().contains(".json")) {
-                    String jasonStr = Utils.loadJsonFile(is);
-                    Utils.analysisJsonFile(jasonStr);
-                    long transSz = dataConnection.transferFromClient(session.getFtpletSession(), is, outStream);
+                    InputStream is = dataConnection.getDataInputStream();
+                    baos = Utils.inputStreamCacher(is);
+                    bais = new ByteArrayInputStream(baos.toByteArray());
+                    String jsonStr = Utils.loadJsonFile(bais);
+                    Utils.analysisJsonFile(jsonStr);
                 }
-                long transSz = dataConnection.transferFromClient(session.getFtpletSession(), outStream);
+                if (baos != null) {
+                    transSz = dataConnection.
+                            transferFromClient(session.getFtpletSession(), new BufferedInputStream(bais), outStream);
+                } else {
+                    transSz = dataConnection.transferFromClient(session.getFtpletSession(), outStream);
+                }
                 // attempt to close the output stream so that errors in
                 // closing it will return an error to the client (FTPSERVER-119)
                 if(outStream != null) {

@@ -9,21 +9,19 @@ import java.net.URL;
 public class Test {
     static URL url = Utils.class.getResource("/");
     public static void main(String args[]) throws Exception {
-        File file = new File("/Users/zhaozhe/pp");
+        File file = new File("/Users/zhaozhe/Desktop/2017/05/23/17130NCY0HZ0004-0/15/58/2017_05_23_15_58_37_5696_0.json");
         FileInputStream fis = new FileInputStream(file);
-        InputStreamReader bis = new InputStreamReader(fis);
-        BufferedReader br = new BufferedReader(bis);
-        BufferedReader br2 = br;
-        String str;
-        String str2;
-        while((str = br.readLine()) != null) {
-            System.out.println("1");
-            System.out.println(str);
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        byte[] buffer = new byte[1024];
+        int len;
+        while((len = fis.read(buffer)) > -1) {
+            baos.write(buffer, 0, len);
         }
+        baos.flush();
+        baos.close();
 
-        while((str2 = br2.readLine()) != null) {
-            System.out.println("2");
-            System.out.println(str2);
-        }
+        ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
+
+        Utils.analysisJsonFile("[" + Utils.loadJsonFile(bais) + "]");
     }
 }
