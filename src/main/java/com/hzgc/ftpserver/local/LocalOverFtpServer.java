@@ -1,11 +1,10 @@
 package com.hzgc.ftpserver.local;
 
-import com.hzgc.ftpserver.util.Utiles;
+import com.hzgc.ftpserver.util.Utils;
 import org.apache.ftpserver.DataConnectionConfigurationFactory;
 import org.apache.ftpserver.FtpServer;
 import org.apache.ftpserver.FtpServerFactory;
 import org.apache.ftpserver.listener.ListenerFactory;
-import org.apache.ftpserver.usermanager.PropertiesUserManagerFactory;
 import org.apache.log4j.Logger;
 
 import java.io.FileInputStream;
@@ -21,12 +20,12 @@ public class LocalOverFtpServer {
     private static void loadConfig() throws IOException {
         Properties props = new Properties();
         dataConnConf = new DataConnectionConfigurationFactory();
-        props.load(new FileInputStream(Utiles.loadResourceFile("local-over-ftp.properties")));
+        props.load(new FileInputStream(Utils.loadResourceFile("local-over-ftp.properties")));
         log.info("Load configuration for ftp server from ./conf/local-over-ftp.properties");
 
         try {
             listenerPort = Integer.parseInt(props.getProperty("listener-port"));
-            boolean checkPort = Utiles.checkPort(listenerPort);
+            boolean checkPort = Utils.checkPort(listenerPort);
             if (!checkPort) {
                 log.error("The port settings for listener port is illegal and must be greater than 1024");
                 System.exit(1);
@@ -59,12 +58,19 @@ public class LocalOverFtpServer {
         // replace the default listener
         serverFactory.addListener("default", listenerFactory.createListener());
         log.info("Add listner, name:default, class:" + serverFactory.getListener("default").getClass());
+        // set customer user manager
         LocalPropertiesUserManagerFactory userManagerFactory = new LocalPropertiesUserManagerFactory();
-        userManagerFactory.setFile(Utiles.loadResourceFile("users.properties"));
+        userManagerFactory.setFile(Utils.loadResourceFile("users.properties"));
         serverFactory.setUserManager(userManagerFactory.createUserManager());
-
+        log.info("Set customer user manager factory is successful, " + userManagerFactory.getClass());
+        //set customer cmd factory
         LocalCmdFactoryFactory cmdFactoryFactory = new LocalCmdFactoryFactory();
         serverFactory.setCommandFactory(cmdFactoryFactory.createCommandFactory());
+        log.info("Set customer command factory is successful, " + cmdFactoryFactory.getClass());
+        //set local file system
+        LocalFileSystemFactory localFileSystemFactory = new LocalFileSystemFactory();
+        serverFactory.setFileSystem(localFileSystemFactory);
+        log.info("Set customer file system factory is successful, " + localFileSystemFactory.getClass());
         FtpServer server = serverFactory.createServer();
         server.start();
 

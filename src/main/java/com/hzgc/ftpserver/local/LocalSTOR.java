@@ -1,7 +1,7 @@
 package com.hzgc.ftpserver.local;
 
 
-import com.hzgc.ftpserver.util.Utiles;
+import com.hzgc.ftpserver.util.Utils;
 import org.apache.ftpserver.command.AbstractCommand;
 import org.apache.ftpserver.command.impl.STOR;
 import org.apache.ftpserver.ftplet.*;
@@ -10,16 +10,15 @@ import org.apache.ftpserver.util.IoUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.net.SocketException;
 
 public class LocalSTOR extends AbstractCommand{
     private final Logger LOG = LoggerFactory.getLogger(STOR.class);
-    private static final String ATTRIBUTE_PREFIX = "org.apache.ftpserver.";
-    private static final String ATTRIBUTE_DATA_CONNECTION = ATTRIBUTE_PREFIX + "data-connection";
 
     /**
      * Execute command.
@@ -111,8 +110,13 @@ public class LocalSTOR extends AbstractCommand{
             OutputStream outStream = null;
             try {
                 outStream = file.createOutputStream(skipLen);
-                String jasonStr = Utiles.loadJsonFile(dataConnection.getDataInputStream());
-                Utiles.analysisJsonFile(jasonStr);
+                InputStream is = dataConnection.getDataInputStream();
+                //parsing JSON files
+                if (file.getName().contains(".json")) {
+                    String jasonStr = Utils.loadJsonFile(is);
+                    Utils.analysisJsonFile(jasonStr);
+                    long transSz = dataConnection.transferFromClient(session.getFtpletSession(), is, outStream);
+                }
                 long transSz = dataConnection.transferFromClient(session.getFtpletSession(), outStream);
                 // attempt to close the output stream so that errors in
                 // closing it will return an error to the client (FTPSERVER-119)

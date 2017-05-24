@@ -5,7 +5,6 @@ import org.apache.ftpserver.FtpServerConfigurationException;
 import org.apache.ftpserver.ftplet.*;
 import org.apache.ftpserver.usermanager.AnonymousAuthentication;
 import org.apache.ftpserver.usermanager.PasswordEncryptor;
-import org.apache.ftpserver.usermanager.PropertiesUserManagerFactory;
 import org.apache.ftpserver.usermanager.UsernamePasswordAuthentication;
 import org.apache.ftpserver.usermanager.impl.*;
 import org.apache.ftpserver.util.BaseProperties;
@@ -20,7 +19,7 @@ import java.util.*;
 public class LocalPropertiesUserManager extends AbstractUserManager {
 
     private final Logger LOG = LoggerFactory
-            .getLogger(PropertiesUserManager.class);
+            .getLogger(LocalPropertiesUserManager.class);
 
     private final static String PREFIX = "ftpserver.user.";
 

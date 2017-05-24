@@ -20,7 +20,7 @@ import java.util.zip.InflaterInputStream;
 
 public class LocalIODataConnection implements DataConnection{
     private final Logger LOG = LoggerFactory
-            .getLogger(IODataConnection.class);
+            .getLogger(LocalIODataConnection.class);
 
 
     private static final byte[] EOL = System.getProperty("line.separator").getBytes();
@@ -103,6 +103,23 @@ public class LocalIODataConnection implements DataConnection{
         }
 
         InputStream is = getDataInputStream();
+        try {
+            return transfer(session, false, is, out, maxRate);
+        } finally {
+            IoUtils.close(is);
+        }
+    }
+
+    public final long transferFromClient(FtpSession session, final InputStream is
+            ,final OutputStream out) throws IOException {
+        TransferRateRequest transferRateRequest = new TransferRateRequest();
+        transferRateRequest = (TransferRateRequest) session.getUser()
+                .authorize(transferRateRequest);
+        int maxRate = 0;
+        if (transferRateRequest != null) {
+            maxRate = transferRateRequest.getMaxUploadRate();
+        }
+
         try {
             return transfer(session, false, is, out, maxRate);
         } finally {

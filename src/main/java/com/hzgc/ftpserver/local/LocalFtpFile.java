@@ -5,6 +5,7 @@ import org.apache.ftpserver.filesystem.nativefs.impl.NativeFtpFile;
 import org.apache.ftpserver.ftplet.FtpFile;
 import org.apache.ftpserver.ftplet.User;
 import org.apache.ftpserver.usermanager.impl.WriteRequest;
+import org.apache.hadoop.fs.LocalFileSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,7 +14,7 @@ import java.util.*;
 
 
 public class LocalFtpFile implements FtpFile {
-    private final Logger LOG = LoggerFactory.getLogger(NativeFtpFile.class);
+    private final Logger LOG = LoggerFactory.getLogger(LocalFtpFile.class);
 
     // the file name with respect to the user root.
     // The path separator character will be '/' and
