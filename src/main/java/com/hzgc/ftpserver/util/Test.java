@@ -3,9 +3,7 @@ package com.hzgc.ftpserver.util;
 import java.io.*;
 import java.net.URL;
 
-/**
- * Created by zhaozhe on 2017/5/22.
- */
+
 public class Test {
     static URL url = Utils.class.getResource("/");
     public static void main(String args[]) throws Exception {
@@ -15,6 +13,7 @@ public class Test {
         byte[] buffer = new byte[1024];
         int len;
         while((len = fis.read(buffer)) > -1) {
+            System.out.println("====" + len + "====");
             baos.write(buffer, 0, len);
         }
         baos.flush();

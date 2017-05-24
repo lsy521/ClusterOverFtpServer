@@ -101,11 +101,8 @@ public class Utils {
         } catch (IOException e) {
             log.error(e.getMessage(), e);
         } finally {
-            try {
-                baos.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            IoUtils.close(baos);
+            IoUtils.close(is);
         }
         return baos;
     }
