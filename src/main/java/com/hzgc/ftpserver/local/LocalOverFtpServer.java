@@ -7,6 +7,7 @@ import org.apache.ftpserver.FtpServerFactory;
 import org.apache.ftpserver.listener.ListenerFactory;
 import org.apache.log4j.Logger;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
@@ -15,6 +16,7 @@ public class LocalOverFtpServer {
     private static Logger log = Logger.getLogger(LocalOverFtpServer.class);
     private static int listenerPort = 0;
     private static String passivePorts = null;
+    private static String jsonLogPath;
     private static DataConnectionConfigurationFactory dataConnConf;
 
     private static void loadConfig() throws IOException {
@@ -32,8 +34,26 @@ public class LocalOverFtpServer {
             }
             log.info("The listener port:" + listenerPort + " for ftpserver is already set");
         } catch (Exception e) {
-            log.error("The port for listener is not set, Check that the \"listener-port\" is set");
+            log.error("The port for listener is not set, Check that the \"listener-port\" is set", e);
             System.exit(1);
+        }
+
+        try {
+            jsonLogPath = props.getProperty("json-log");
+            File jsonLogFile;
+            if (null != jsonLogPath) {
+                jsonLogFile = new File(jsonLogPath);
+                if (jsonLogFile.exists()) {
+                    Utils.jsonLogPath = jsonLogFile;
+                    log.info(jsonLogFile.getPath() + "is exist, append to it");
+                } else {
+                    jsonLogFile.createNewFile();
+                    Utils.jsonLogPath = jsonLogFile;
+                    log.info(jsonLogFile.getPath() + "is not exist, create it");
+                }
+            }
+        } catch (Exception e) {
+            log.error("Get the path for local json path failure", e);
         }
 
         if (listenerPort != 0) {

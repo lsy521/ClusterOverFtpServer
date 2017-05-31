@@ -13,6 +13,7 @@ import java.util.Iterator;
 
 public class Utils {
     private static Logger log = Logger.getLogger(Utils.class);
+    public static File jsonLogPath;
 
     public static boolean checkPort(int checkPort) throws Exception {
         return checkPort > 1024;
@@ -68,6 +69,21 @@ public class Utils {
             }
         }
         return strBuff.toString();
+    }
+
+    public static void writeJsonLog(String jsonContext) {
+        FileWriter fileWriter = null;
+        PrintWriter printWriter = null;
+        try {
+            fileWriter = new FileWriter(jsonLogPath, true);
+            printWriter = new PrintWriter(fileWriter);
+            printWriter.println(jsonContext);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            IoUtils.close(printWriter);
+            IoUtils.close(fileWriter);
+        }
     }
 
     public static void analysisJsonFile(String jsonContext) {

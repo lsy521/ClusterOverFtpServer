@@ -7,20 +7,7 @@ import java.net.URL;
 public class Test {
     static URL url = Utils.class.getResource("/");
     public static void main(String args[]) throws Exception {
-        File file = new File("/Users/zhaozhe/Desktop/2017/05/23/17130NCY0HZ0004-0/15/58/2017_05_23_15_58_37_5696_0.json");
-        FileInputStream fis = new FileInputStream(file);
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        byte[] buffer = new byte[1024];
-        int len;
-        while((len = fis.read(buffer)) > -1) {
-            System.out.println("====" + len + "====");
-            baos.write(buffer, 0, len);
-        }
-        baos.flush();
-        baos.close();
-
-        ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
-
-        Utils.analysisJsonFile("[" + Utils.loadJsonFile(bais) + "]");
+        File file = new File("C:\\Users\\Administrator.SKY-20170426OET\\Desktop\\data_hzgc\\17130NCY0HZ0001-0\\00\\02\\2017_04_24_00_02_43_28092_1.jpg");
+//        File file = new File("C:\\Users\\Administrator.SKY-20170426OET\\Desktop\\data_hzgc\\17130NCY0HZ0001-0\\00\\02\\2017_04_24_00_02_43_28092_1.jpg")
     }
 }

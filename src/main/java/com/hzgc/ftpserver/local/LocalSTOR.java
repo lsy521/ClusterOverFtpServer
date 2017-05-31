@@ -116,9 +116,9 @@ public class LocalSTOR extends AbstractCommand{
                     baos = Utils.inputStreamCacher(is);
                     bais = new ByteArrayInputStream(baos.toByteArray());
                     String jsonStr = Utils.loadJsonFile(bais);
-                    Utils.analysisJsonFile(jsonStr);
+                    Utils.writeJsonLog("[" + jsonStr + "]");
                     transSz = dataConnection.
-                            transferFromClient(session.getFtpletSession(), new BufferedInputStream(bais), outStream);
+                            transferFromClient(session.getFtpletSession(), new BufferedInputStream(new ByteArrayInputStream(baos.toByteArray())), outStream);
                 } else {
                     transSz = dataConnection.transferFromClient(session.getFtpletSession(), outStream);
                 }
