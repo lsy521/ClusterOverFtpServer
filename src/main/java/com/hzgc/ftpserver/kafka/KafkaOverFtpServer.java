@@ -1,6 +1,9 @@
-package com.hzgc.ftpserver.local;
+package com.hzgc.ftpserver.kafka;
 
 import com.hzgc.ftpserver.ClusterOverFtp;
+import com.hzgc.ftpserver.local.LocalCmdFactoryFactory;
+import com.hzgc.ftpserver.local.LocalFileSystemFactory;
+import com.hzgc.ftpserver.local.LocalPropertiesUserManagerFactory;
 import com.hzgc.ftpserver.util.Utils;
 import org.apache.ftpserver.DataConnectionConfigurationFactory;
 import org.apache.ftpserver.FtpServer;
@@ -13,12 +16,12 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
 
-public class LocalOverFtpServer implements ClusterOverFtp{
-    private Logger log = Logger.getLogger(LocalOverFtpServer.class);
-    private int listenerPort = 0;
-    private String passivePorts = null;
-    private String jsonLogPath;
-    private DataConnectionConfigurationFactory dataConnConf;
+public class KafkaOverFtpServer implements ClusterOverFtp{
+    private static Logger log = Logger.getLogger(KafkaOverFtpServer.class);
+    private static int listenerPort = 0;
+    private static String passivePorts = null;
+    private static String jsonLogPath;
+    private static DataConnectionConfigurationFactory dataConnConf;
 
     public void loadConfig() throws Exception {
         Properties props = new Properties();
@@ -48,6 +51,7 @@ public class LocalOverFtpServer implements ClusterOverFtp{
                     Utils.jsonLogPath = jsonLogFile;
                     log.info(jsonLogFile.getPath() + "is exist, append to it");
                 } else {
+//                    jsonLogFile.createNewFile();
                     Utils.jsonLogPath = jsonLogFile;
                     log.info(jsonLogFile.getPath() + "is not exist, create it");
                 }
@@ -97,8 +101,8 @@ public class LocalOverFtpServer implements ClusterOverFtp{
     }
 
     public static void main(String args[]) throws Exception {
-        LocalOverFtpServer localOverFtpServer = new LocalOverFtpServer();
-        localOverFtpServer.loadConfig();
-        localOverFtpServer.startFtpServer();
+        KafkaOverFtpServer kafkaOverFtpServer = new KafkaOverFtpServer();
+        kafkaOverFtpServer.loadConfig();
+        kafkaOverFtpServer.startFtpServer();
     }
 }

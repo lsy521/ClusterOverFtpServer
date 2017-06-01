@@ -20,7 +20,7 @@ public class Utils {
     }
 
 
-    public static File loadResourceFile(String resourceName) {
+    public static File loadResourceFile(String resourceName) throws Exception{
         if (false) {
             URL resource = LocalOverFtpServer.class.getResource("/conf");
             String confPath = resource.getPath();
