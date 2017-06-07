@@ -5,6 +5,7 @@ import com.hzgc.ftpserver.util.Utils;
 import org.apache.ftpserver.DataConnectionConfigurationFactory;
 import org.apache.ftpserver.FtpServer;
 import org.apache.ftpserver.FtpServerFactory;
+import org.apache.ftpserver.ftplet.FtpException;
 import org.apache.ftpserver.listener.ListenerFactory;
 import org.apache.log4j.Logger;
 
@@ -13,61 +14,10 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
 
-public class LocalOverFtpServer implements ClusterOverFtp{
+public class LocalOverFtpServer extends ClusterOverFtp{
     private Logger log = Logger.getLogger(LocalOverFtpServer.class);
-    private int listenerPort = 0;
-    private String passivePorts = null;
-    private String jsonLogPath;
-    private DataConnectionConfigurationFactory dataConnConf;
 
-    public void loadConfig() throws Exception {
-        Properties props = new Properties();
-        dataConnConf = new DataConnectionConfigurationFactory();
-        props.load(new FileInputStream(Utils.loadResourceFile("local-over-ftp.properties")));
-        log.info("Load configuration for ftp server from ./conf/local-over-ftp.properties");
-
-        try {
-            listenerPort = Integer.parseInt(props.getProperty("listener-port"));
-            boolean checkPort = Utils.checkPort(listenerPort);
-            if (!checkPort) {
-                log.error("The port settings for listener port is illegal and must be greater than 1024");
-                System.exit(1);
-            }
-            log.info("The listener port:" + listenerPort + " for ftpserver is already set");
-        } catch (Exception e) {
-            log.error("The port for listener is not set, Check that the \"listener-port\" is set", e);
-            System.exit(1);
-        }
-
-        try {
-            jsonLogPath = props.getProperty("json-log");
-            File jsonLogFile;
-            if (null != jsonLogPath) {
-                jsonLogFile = new File(jsonLogPath);
-                if (jsonLogFile.exists()) {
-                    Utils.jsonLogPath = jsonLogFile;
-                    log.info(jsonLogFile.getPath() + "is exist, append to it");
-                } else {
-                    Utils.jsonLogPath = jsonLogFile;
-                    log.info(jsonLogFile.getPath() + "is not exist, create it");
-                }
-            }
-        } catch (Exception e) {
-            log.error("Get the path for local json path failure", e);
-        }
-
-        if (listenerPort != 0) {
-            passivePorts = props.getProperty("data-ports");
-            if (passivePorts == null) {
-                log.info("The data ports is not set, use any available port");
-            } else {
-                dataConnConf.setPassivePorts(passivePorts);
-                log.warn("The data ports is set:" + passivePorts);
-            }
-        }
-    }
-
-    public void startFtpServer() throws Exception {
+    public void startFtpServer() {
         FtpServerFactory serverFactory = new FtpServerFactory();
         log.info("Create " + FtpServerFactory.class + " successful");
         ListenerFactory listenerFactory = new ListenerFactory();
@@ -80,7 +30,11 @@ public class LocalOverFtpServer implements ClusterOverFtp{
         log.info("Add listner, name:default, class:" + serverFactory.getListener("default").getClass());
         // set customer user manager
         LocalPropertiesUserManagerFactory userManagerFactory = new LocalPropertiesUserManagerFactory();
-        userManagerFactory.setFile(Utils.loadResourceFile("users.properties"));
+        try {
+            userManagerFactory.setFile(Utils.loadResourceFile("users.properties"));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         serverFactory.setUserManager(userManagerFactory.createUserManager());
         log.info("Set customer user manager factory is successful, " + userManagerFactory.getClass());
         //set customer cmd factory
@@ -92,7 +46,11 @@ public class LocalOverFtpServer implements ClusterOverFtp{
         serverFactory.setFileSystem(localFileSystemFactory);
         log.info("Set customer file system factory is successful, " + localFileSystemFactory.getClass());
         FtpServer server = serverFactory.createServer();
-        server.start();
+        try {
+            server.start();
+        } catch (FtpException e) {
+            e.printStackTrace();
+        }
 
     }
 

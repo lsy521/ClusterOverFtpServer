@@ -22,7 +22,7 @@ public class Utils {
 
     public static File loadResourceFile(String resourceName) throws Exception{
         if (false) {
-            URL resource = LocalOverFtpServer.class.getResource("/conf");
+            URL resource = LocalOverFtpServer.class.getResource("/conf/");
             String confPath = resource.getPath();
             confPath = confPath.substring(5, confPath.lastIndexOf("/lib"));
             confPath = confPath + "/conf/";
@@ -121,5 +121,26 @@ public class Utils {
             IoUtils.close(is);
         }
         return baos;
+    }
+
+    /**
+     *
+     * @param pictureName
+     * determine the picture type based on the file name
+     * @return
+     * equals 0, it is a picture
+     * lager than 0, it is a face picture
+     */
+    public static int pickPicture(String pictureName) {
+        int picType = 0;
+        if (null != pictureName) {
+            String tmpStr = pictureName.substring(pictureName.lastIndexOf("_") + 1, pictureName.lastIndexOf("."));
+            try {
+                picType = Integer.parseInt(tmpStr);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return picType;
     }
 }

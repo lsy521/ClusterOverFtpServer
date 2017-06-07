@@ -1,12 +1,13 @@
-package com.hzgc.ftpserver.local;
+package com.hzgc.ftpserver.kafka;
 
-
+import com.hzgc.ftpserver.local.LocalIODataConnection;
+import com.hzgc.ftpserver.util.KafkaProducerSingleton;
 import com.hzgc.ftpserver.util.Utils;
 import org.apache.ftpserver.command.AbstractCommand;
-import org.apache.ftpserver.command.impl.STOR;
 import org.apache.ftpserver.ftplet.*;
 import org.apache.ftpserver.impl.*;
 import org.apache.ftpserver.util.IoUtils;
+import org.apache.kafka.clients.producer.KafkaProducer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,15 +15,16 @@ import java.io.*;
 import java.net.InetAddress;
 import java.net.SocketException;
 
-public class LocalSTOR extends AbstractCommand{
-    private final Logger LOG = LoggerFactory.getLogger(LocalSTOR.class);
+public class KafkaSTOR extends AbstractCommand {
+    private final Logger LOG = LoggerFactory.getLogger(KafkaSTOR.class);
 
-    /**
-     * Execute command.
-     */
     public void execute(final FtpIoSession session,
                         final FtpServerContext context, final FtpRequest request)
             throws IOException, FtpException {
+        KafkaFtpServerContext kafkaContext = null;
+        if (context instanceof KafkaFtpServerContext) {
+            kafkaContext = (KafkaFtpServerContext)context;
+        }
         try {
 
             // get state variable
@@ -36,21 +38,19 @@ public class LocalSTOR extends AbstractCommand{
                                 .translate(
                                         session,
                                         request,
-                                        context,
+                                        kafkaContext,
                                         FtpReply.REPLY_501_SYNTAX_ERROR_IN_PARAMETERS_OR_ARGUMENTS,
                                         "STOR", null));
                 return;
             }
 
-            // 24-10-2007 - added check if PORT or PASV is issued, see
-            // https://issues.apache.org/jira/browse/FTPSERVER-110
             DataConnectionFactory connFactory = null;
             try {
                 connFactory = session.getDataConnection();
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            if (connFactory instanceof ServerDataConnectionFactory) {
+            if (connFactory != null) {
                 InetAddress address = ((ServerDataConnectionFactory) connFactory)
                         .getInetAddress();
                 if (address == null) {
@@ -69,7 +69,7 @@ public class LocalSTOR extends AbstractCommand{
                 LOG.info("Exception getting file object", ex);
             }
             if (file == null) {
-                session.write(LocalizedFtpReply.translate(session, request, context,
+                session.write(LocalizedFtpReply.translate(session, request, kafkaContext,
                         FtpReply.REPLY_550_REQUESTED_ACTION_NOT_TAKEN,
                         "STOR.invalid", fileName));
                 return;
@@ -78,7 +78,7 @@ public class LocalSTOR extends AbstractCommand{
 
             // get permission
             if (!file.isWritable()) {
-                session.write(LocalizedFtpReply.translate(session, request, context,
+                session.write(LocalizedFtpReply.translate(session, request, kafkaContext,
                         FtpReply.REPLY_550_REQUESTED_ACTION_NOT_TAKEN,
                         "STOR.permission", fileName));
                 return;
@@ -86,7 +86,7 @@ public class LocalSTOR extends AbstractCommand{
 
             // get data connection
             session.write(
-                    LocalizedFtpReply.translate(session, request, context,
+                    LocalizedFtpReply.translate(session, request, kafkaContext,
                             FtpReply.REPLY_150_FILE_STATUS_OKAY, "STOR",
                             fileName)).awaitUninterruptibly(10000);
 
@@ -96,7 +96,7 @@ public class LocalSTOR extends AbstractCommand{
                 dataConnection = new LocalIODataConnection(customConnFactory.createDataSocket(), customConnFactory.getSession(), customConnFactory);
             } catch (Exception e) {
                 LOG.info("Exception getting the input data stream", e);
-                session.write(LocalizedFtpReply.translate(session, request, context,
+                session.write(LocalizedFtpReply.translate(session, request, kafkaContext,
                         FtpReply.REPLY_425_CANT_OPEN_DATA_CONNECTION, "STOR",
                         fileName));
                 return;
@@ -106,20 +106,34 @@ public class LocalSTOR extends AbstractCommand{
             boolean failure = false;
             OutputStream outStream = null;
             try {
-                outStream = file.createOutputStream(skipLen);
-                ByteArrayOutputStream baos = null;
-                ByteArrayInputStream bais = null;
+                ByteArrayOutputStream baos;
+                InputStream is = dataConnection.getDataInputStream();
+                baos = Utils.inputStreamCacher(is);
+                ProducerOverFtpSingle kafkaProducer = kafkaContext.getProducerOverFtp();
                 long transSz;
                 //parsing JSON files
                 if (file.getName().contains(".json")) {
-                    InputStream is = dataConnection.getDataInputStream();
-                    baos = Utils.inputStreamCacher(is);
-                    bais = new ByteArrayInputStream(baos.toByteArray());
-                    //String jsonStr = Utils.loadJsonFile(bais);
-                    //Utils.writeJsonLog("[" + jsonStr + "]");
-                    transSz = dataConnection.
-                            transferFromClient(session.getFtpletSession(), new BufferedInputStream(bais), outStream);
+                    LOG.info("Kafka Producer Send message[" + fileName + "] to Kafka");
+                    kafkaProducer.sendKafkaMessage(kafkaProducer.getJson(), fileName, baos.toByteArray());
+                    transSz = baos.toByteArray().length;
+                } else if (fileName.contains(".jpg")) {
+                    //it is picture
+                    if (Utils.pickPicture(fileName) == 0) {
+                        LOG.info("Kafka Producer Send message[" + fileName + "] to Kafka");
+                        kafkaProducer.sendKafkaMessage(kafkaProducer.getPicture(), fileName, baos.toByteArray());
+                        transSz = baos.toByteArray().length;
+                    } else if (Utils.pickPicture(fileName) > 0) {
+                        LOG.info("Kafka Producer Send message[" + fileName + "] to Kafka");
+                        kafkaProducer.sendKafkaMessage(kafkaProducer.getFace(), fileName, baos.toByteArray());
+                        transSz = baos.toByteArray().length;
+                    } else {
+                        LOG.info("Contains illegal file[" + fileName  + "], write to local default");
+                        outStream = file.createOutputStream(skipLen);
+                        transSz = dataConnection.transferFromClient(session.getFtpletSession(), outStream);
+                    }
                 } else {
+                    LOG.info("Contains illegal file[" + fileName  + "], write to local default");
+                    outStream = file.createOutputStream(skipLen);
                     transSz = dataConnection.transferFromClient(session.getFtpletSession(), outStream);
                 }
                 // attempt to close the output stream so that errors in
@@ -131,14 +145,14 @@ public class LocalSTOR extends AbstractCommand{
                 LOG.info("File uploaded {}", fileName);
 
                 // notify the statistics component
-                ServerFtpStatistics ftpStat = (ServerFtpStatistics) context
+                ServerFtpStatistics ftpStat = (ServerFtpStatistics) kafkaContext
                         .getFtpStatistics();
                 ftpStat.setUpload(session, file, transSz);
 
             } catch (SocketException ex) {
                 LOG.info("Socket exception during data transfer", ex);
                 failure = true;
-                session.write(LocalizedFtpReply.translate(session, request, context,
+                session.write(LocalizedFtpReply.translate(session, request, kafkaContext,
                         FtpReply.REPLY_426_CONNECTION_CLOSED_TRANSFER_ABORTED,
                         "STOR", fileName));
             } catch (IOException ex) {
@@ -149,7 +163,7 @@ public class LocalSTOR extends AbstractCommand{
                                 .translate(
                                         session,
                                         request,
-                                        context,
+                                        kafkaContext,
                                         FtpReply.REPLY_551_REQUESTED_ACTION_ABORTED_PAGE_TYPE_UNKNOWN,
                                         "STOR", fileName));
             } finally {
@@ -159,7 +173,7 @@ public class LocalSTOR extends AbstractCommand{
 
             // if data transfer ok - send transfer complete message
             if (!failure) {
-                session.write(LocalizedFtpReply.translate(session, request, context,
+                session.write(LocalizedFtpReply.translate(session, request, kafkaContext,
                         FtpReply.REPLY_226_CLOSING_DATA_CONNECTION, "STOR",
                         fileName));
 
