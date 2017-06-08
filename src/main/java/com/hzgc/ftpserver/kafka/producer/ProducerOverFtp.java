@@ -1,27 +1,25 @@
-package com.hzgc.ftpserver.kafka;
+package com.hzgc.ftpserver.kafka.producer;
 
 
 import com.hzgc.ftpserver.util.Utils;
 import org.apache.ftpserver.util.IoUtils;
-import org.apache.kafka.clients.producer.Callback;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.Properties;
 
-public class ProducerOverFtpSingle {
-    private static Logger log = Logger.getLogger(ProducerOverFtpSingle.class);
+public class ProducerOverFtp {
+    private static Logger log = Logger.getLogger(ProducerOverFtp.class);
     private static KafkaProducer kafkaProducer;
     private Properties kafkaPropers = new Properties();
     private FileInputStream fis;
     private static  String PICTURE = "picture";
     private static  String FACE = "face";
     private static  String JSON = "json";
-    public ProducerOverFtpSingle() {
+    public ProducerOverFtp() {
         try {
             File file = Utils.loadResourceFile("kafka-over-ftp.properties");
             this.fis = new FileInputStream(file);
@@ -54,12 +52,12 @@ public class ProducerOverFtpSingle {
         }
     }
 
-    public static final ProducerOverFtpSingle getInstance() {
+    public static final ProducerOverFtp getInstance() {
         return LazyHandler.instanc;
     }
 
     public static class LazyHandler {
-        private static final ProducerOverFtpSingle instanc = new ProducerOverFtpSingle();
+        private static final ProducerOverFtp instanc = new ProducerOverFtp();
     }
 
     public static String getPicture() {

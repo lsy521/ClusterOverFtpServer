@@ -1,4 +1,4 @@
-package com.hzgc.ftpserver.kafka;
+package com.hzgc.ftpserver.kafka.producer;
 
 import org.apache.kafka.clients.producer.Callback;
 import org.apache.kafka.clients.producer.RecordMetadata;
