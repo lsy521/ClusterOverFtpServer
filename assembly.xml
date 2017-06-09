@@ -1,5 +1,5 @@
 <assembly schemaLocation="http://maven.apache.org/xsd/assembly-1.0.0.xsd">
-    <id>jar-with-dependencies</id>
+    <id>assembly</id>
     <formats>
         <format>jar</format>
     </formats>

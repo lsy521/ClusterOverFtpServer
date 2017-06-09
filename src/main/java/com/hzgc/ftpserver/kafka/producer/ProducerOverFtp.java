@@ -21,7 +21,7 @@ public class ProducerOverFtp {
     private static  String JSON = "json";
     public ProducerOverFtp() {
         try {
-            File file = Utils.loadResourceFile("kafka-over-ftp.properties");
+            File file = Utils.loadResourceFile("producer-over-ftp.properties");
             this.fis = new FileInputStream(file);
             this.kafkaPropers.load(fis);
             PICTURE = kafkaPropers.getProperty("topic-picture");

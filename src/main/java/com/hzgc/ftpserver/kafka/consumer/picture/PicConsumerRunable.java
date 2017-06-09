@@ -20,7 +20,7 @@ public class PicConsumerRunable extends ConsumerRunnable {
                 ConsumerRecords<String, byte[]> records = consumer.poll(100);
                 FileOutputStream fis = null;
                 for (ConsumerRecord<String, byte[]> record : records) {
-                    System.out.printf(Thread.currentThread().getName() + "offset = %d, key = %s, value = %s\n", record.offset(), record.key(), record.value());
+                    System.out.printf("offset = %d, key = %s, value = %s\n", record.offset(), record.key(), record.value());
                     try {
                         fis = new FileOutputStream(new File("E:\\run.jpg"));
                         fis.write(record.value());

@@ -1,4 +1,4 @@
-package com.hzgc.ftpserver.kafka;
+package com.hzgc.ftpserver.kafka.ftp;
 
 import org.apache.ftpserver.ConnectionConfig;
 import org.apache.ftpserver.FtpServer;
@@ -9,7 +9,6 @@ import org.apache.ftpserver.ftplet.Ftplet;
 import org.apache.ftpserver.ftplet.UserManager;
 import org.apache.ftpserver.ftpletcontainer.impl.DefaultFtpletContainer;
 import org.apache.ftpserver.impl.DefaultFtpServer;
-import org.apache.ftpserver.impl.DefaultFtpServerContext;
 import org.apache.ftpserver.listener.Listener;
 import org.apache.ftpserver.message.MessageResource;
 

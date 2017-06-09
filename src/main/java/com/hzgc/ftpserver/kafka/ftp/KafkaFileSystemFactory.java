@@ -1,18 +1,15 @@
-package com.hzgc.ftpserver.local;
+package com.hzgc.ftpserver.kafka.ftp;
 
-import com.hzgc.ftpserver.kafka.ftp.KafkaFileSystemView;
 import org.apache.ftpserver.ftplet.FileSystemFactory;
 import org.apache.ftpserver.ftplet.FileSystemView;
 import org.apache.ftpserver.ftplet.FtpException;
 import org.apache.ftpserver.ftplet.User;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.log4j.Logger;
 
 import java.io.File;
 
-public class LocalFileSystemFactory implements FileSystemFactory{
-    private final Logger LOG = LoggerFactory
-            .getLogger(LocalFileSystemFactory.class);
+public class KafkaFileSystemFactory implements FileSystemFactory{
+    private final Logger LOG = Logger.getLogger(KafkaFileSystemFactory.class);
 
     private boolean createHome;
 

@@ -1,4 +1,4 @@
-package com.hzgc.ftpserver.kafka;
+package com.hzgc.ftpserver.kafka.ftp;
 
 import com.hzgc.ftpserver.kafka.producer.ProducerOverFtp;
 import com.hzgc.ftpserver.local.LocalIODataConnection;

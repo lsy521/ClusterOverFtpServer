@@ -1,4 +1,4 @@
-package com.hzgc.ftpserver.kafka;
+package com.hzgc.ftpserver.kafka.ftp;
 
 import org.apache.ftpserver.command.Command;
 import org.apache.ftpserver.command.CommandFactory;

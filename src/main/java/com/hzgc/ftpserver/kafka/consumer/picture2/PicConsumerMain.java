@@ -13,6 +13,9 @@ public class PicConsumerMain {
     public static void main(String args[]) {
         try {
             resourceFile = Utils.loadResourceFile("consumer-picture.properties");
+            System.out.println("****************************************************************************");
+            propers.list(System.out);
+            System.out.println("****************************************************************************");
             if (resourceFile != null) {
                 propers.load(new FileInputStream(resourceFile));
             }

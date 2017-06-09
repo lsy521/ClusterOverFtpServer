@@ -29,6 +29,7 @@ public class Utils {
             System.out.println(confPath);
             File sourceFile = new File(confPath + resourceName);
             PropertyConfigurator.configure(confPath + "/log4j.properties");
+            PropertyConfigurator.configure(confPath + "/hbase-site.xml");
             if (!sourceFile.exists()) {
                 log.error("The local resource file:" + new File(confPath).getAbsolutePath()
                         + "/" + resourceName + " is not found, " +

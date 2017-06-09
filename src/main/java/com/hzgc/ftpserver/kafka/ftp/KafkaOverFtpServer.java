@@ -1,8 +1,6 @@
-package com.hzgc.ftpserver.kafka;
+package com.hzgc.ftpserver.kafka.ftp;
 
 import com.hzgc.ftpserver.ClusterOverFtp;
-import com.hzgc.ftpserver.local.LocalCmdFactoryFactory;
-import com.hzgc.ftpserver.local.LocalFileSystemFactory;
 import com.hzgc.ftpserver.local.LocalPropertiesUserManagerFactory;
 import com.hzgc.ftpserver.util.Utils;
 import org.apache.ftpserver.FtpServer;
@@ -38,9 +36,9 @@ public class KafkaOverFtpServer extends ClusterOverFtp{
         serverFactory.setCommandFactory(cmdFactoryFactory.createCommandFactory());
         log.info("Set customer command factory is successful, " + cmdFactoryFactory.getClass());
         //set local file system
-        LocalFileSystemFactory localFileSystemFactory = new LocalFileSystemFactory();
-        serverFactory.setFileSystem(localFileSystemFactory);
-        log.info("Set customer file system factory is successful, " + localFileSystemFactory.getClass());
+        KafkaFileSystemFactory kafkaFileSystemFactory = new KafkaFileSystemFactory();
+        serverFactory.setFileSystem(kafkaFileSystemFactory);
+        log.info("Set kafka file system factory is successful, " + kafkaFileSystemFactory.getClass());
         FtpServer server = serverFactory.createServer();
         try {
             server.start();
