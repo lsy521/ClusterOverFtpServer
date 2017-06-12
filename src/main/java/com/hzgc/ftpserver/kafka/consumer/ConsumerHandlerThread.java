@@ -2,6 +2,7 @@ package com.hzgc.ftpserver.kafka.consumer;
 
 import com.hzgc.ftpserver.kafka.consumer.picture2.PicWorkerThread;
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.hbase.client.Connection;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -14,18 +15,27 @@ import java.util.concurrent.*;
 public class ConsumerHandlerThread implements Runnable{
     protected final Logger LOG;
     private final KafkaConsumer<String, byte[]> consumer;
+    private Connection hbaseConn;
     private ExecutorService executors;
     private Properties propers;
     private final ConcurrentHashMap<String, Boolean> isCommit;
+    private String tableName;
+    private String columnFamily;
+    private String column;
 
-    public ConsumerHandlerThread(Properties propers, Class logClass) {
+
+    public ConsumerHandlerThread(Properties propers, Connection conn, Class logClass) {
         this.propers = propers;
+        this.hbaseConn = conn;
         this.consumer = new KafkaConsumer<>(propers);
         this.LOG = Logger.getLogger(logClass);
         String topic = propers.getProperty("topic");
         consumer.subscribe(Arrays.asList(StringUtils.split(topic, ",")));
-        isCommit = new ConcurrentHashMap<>();
-        isCommit.put("isCommit", false);
+        this.isCommit = new ConcurrentHashMap<>();
+        this.isCommit.put("isCommit", true);
+        this.tableName = propers.getProperty("table_name");
+        this.columnFamily = propers.getProperty("cf_pic");
+        this.column = propers.getProperty("c_pic");
     }
 
     public void run() {
@@ -40,11 +50,13 @@ public class ConsumerHandlerThread implements Runnable{
         try {
             while (true) {
                 ConsumerRecords<String, byte[]> records = consumer.poll(getTimeOut);
-                for (final ConsumerRecord<String, byte[]> record : records) {
-                    executors.submit(new PicWorkerThread(record, isCommit));
-                    consumerTimes ++;
-                    if (!isCommit.get("isCommit")) {
-                        failWorker ++;
+                if (!records.isEmpty()) {
+                    for (final ConsumerRecord<String, byte[]> record : records) {
+                        executors.submit(new PicWorkerThread(record, hbaseConn, tableName, columnFamily, column, isCommit));
+                        consumerTimes++;
+                        if (!isCommit.get("isCommit")) {
+                            failWorker++;
+                        }
                     }
                 }
                 if (consumerTimes >= minBatchSize && failWorker <= commitFailure) {
@@ -53,9 +65,17 @@ public class ConsumerHandlerThread implements Runnable{
                     consumerTimes = 0;
                     failWorker = 0;
                 }
+                if (failWorker > commitFailure) {
+                    throw new Exception("The number of consumer failures exceeded the threshold, " +
+                            "pulling up consumer threads for consumption");
+                }
             }
+        } catch (Exception e) {
+            e.printStackTrace();
         } finally {
-            consumer.commitSync();
+            ConsumerHandlerThread tempHandlerThread = new ConsumerHandlerThread(propers, hbaseConn, LOG.getClass());
+            Thread thread = new Thread(tempHandlerThread);
+            thread.start();
         }
     }
 //    public void shutDown() {
