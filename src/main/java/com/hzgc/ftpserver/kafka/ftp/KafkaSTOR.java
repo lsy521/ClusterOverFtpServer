@@ -105,36 +105,39 @@ public class KafkaSTOR extends AbstractCommand {
             boolean failure = false;
             OutputStream outStream = null;
             try {
-                ByteArrayOutputStream baos;
+                ByteArrayOutputStream value;
                 InputStream is = dataConnection.getDataInputStream();
-                baos = Utils.inputStreamCacher(is);
+                value = Utils.inputStreamCacher(is);
+                String key;
                 ProducerOverFtp kafkaProducer = kafkaContext.getProducerOverFtp();
                 long transSz;
                 //parsing JSON files
                 if (file.getName().contains(".json")) {
+                    key = Utils.transformNameToKey(file.getName());
                     LOG.info("Kafka Producer Send message[" + file.getName() + "] to Kafka");
-                    kafkaProducer.sendKafkaMessage(kafkaProducer.getJson(), file.getName(), baos.toByteArray());
-                    transSz = baos.toByteArray().length;
+                    kafkaProducer.sendKafkaMessage(kafkaProducer.getJson(), key, value.toByteArray());
+                    transSz = value.toByteArray().length;
                 } else if (fileName.contains(".jpg")) {
+                    key = Utils.transformNameToKey(file.getName());
                     //it is picture
                     if (Utils.pickPicture(fileName) == 0) {
                         LOG.info("Kafka Producer Send message[" + file.getName() + "] to Kafka");
-                        kafkaProducer.sendKafkaMessage(kafkaProducer.getPicture(), file.getName(), baos.toByteArray());
-                        transSz = baos.toByteArray().length;
+                        kafkaProducer.sendKafkaMessage(kafkaProducer.getPicture(), key, value.toByteArray());
+                        transSz = value.toByteArray().length;
                     } else if (Utils.pickPicture(fileName) > 0) {
                         LOG.info("Kafka Producer Send message[" + file.getName() + "] to Kafka");
-                        kafkaProducer.sendKafkaMessage(kafkaProducer.getFace(), file.getName(), baos.toByteArray());
-                        transSz = baos.toByteArray().length;
+                        kafkaProducer.sendKafkaMessage(kafkaProducer.getFace(), key, value.toByteArray());
+                        transSz = value.toByteArray().length;
                     } else {
                         LOG.info("Contains illegal file[" + file.getName()  + "], write to local default");
                         outStream = file.createOutputStream(skipLen);
-                        ByteArrayInputStream bis = new ByteArrayInputStream(baos.toByteArray());
-                        transSz = dataConnection.transferFromClient(session.getFtpletSession(), outStream);
+                        ByteArrayInputStream bis = new ByteArrayInputStream(value.toByteArray());
+                        transSz = dataConnection.transferFromClient(session.getFtpletSession(), bis, outStream);
                     }
                 } else {
                     LOG.info("Contains illegal file[" + fileName  + "], write to local default");
                     outStream = file.createOutputStream(skipLen);
-                    ByteArrayInputStream bis = new ByteArrayInputStream(baos.toByteArray());
+                    ByteArrayInputStream bis = new ByteArrayInputStream(value.toByteArray());
                     transSz = dataConnection.transferFromClient(session.getFtpletSession(), bis, outStream);
                 }
                 // attempt to close the output stream so that errors in

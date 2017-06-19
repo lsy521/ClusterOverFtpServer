@@ -1,6 +1,5 @@
 package com.hzgc.ftpserver.kafka.consumer;
 
-import com.hzgc.ftpserver.kafka.consumer.picture2.PicWorkerThread;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -19,9 +18,9 @@ public class ConsumerHandlerThread implements Runnable{
     private ExecutorService executors;
     private Properties propers;
     private final ConcurrentHashMap<String, Boolean> isCommit;
-    private String tableName;
-    private String columnFamily;
-    private String column;
+    protected String tableName;
+    protected String columnFamily;
+    protected String column;
 
 
     public ConsumerHandlerThread(Properties propers, Connection conn, Class logClass) {
@@ -34,34 +33,37 @@ public class ConsumerHandlerThread implements Runnable{
         this.isCommit = new ConcurrentHashMap<>();
         this.isCommit.put("isCommit", true);
         this.tableName = propers.getProperty("table_name");
-        this.columnFamily = propers.getProperty("cf_pic");
-        this.column = propers.getProperty("c_pic");
     }
 
     public void run() {
         int workerNum = Integer.parseInt(propers.getProperty("workerNum"));
         long getTimeOut = Long.parseLong(propers.getProperty("getTimeOut"));
-        executors = new ThreadPoolExecutor(workerNum, workerNum, 0L, TimeUnit.MILLISECONDS,
-                new ArrayBlockingQueue<Runnable>(1000), new ThreadPoolExecutor.CallerRunsPolicy());
+//        executors = new ThreadPoolExecutor(workerNum, workerNum, 0L, TimeUnit.MILLISECONDS,
+//                new ArrayBlockingQueue<Runnable>(1000), new ThreadPoolExecutor.CallerRunsPolicy());
+        BlockingQueue<ConsumerRecord<String, byte[]>> buffer = new LinkedBlockingQueue<>();
+        executors = Executors.newFixedThreadPool(workerNum);
         final int  minBatchSize = Integer.parseInt(propers.getProperty("minBatchSize"));
         final int commitFailure = Integer.parseInt(propers.getProperty("commitFailure"));
         int consumerTimes = 1;
         int failWorker = 0;
+        for (int i = 0; i < workerNum; i++) {
+            executors.submit(new WorkerThread(hbaseConn, buffer, tableName, columnFamily, column, isCommit));
+        }
         try {
             while (true) {
                 ConsumerRecords<String, byte[]> records = consumer.poll(getTimeOut);
                 if (!records.isEmpty()) {
                     for (final ConsumerRecord<String, byte[]> record : records) {
-                        executors.submit(new PicWorkerThread(record, hbaseConn, tableName, columnFamily, column, isCommit));
+                        buffer.put(record);
                         consumerTimes++;
-                        if (!isCommit.get("isCommit")) {
-                            failWorker++;
-                        }
                     }
+                }
+                if (!isCommit.get("isCommit")) {
+                    failWorker++;
                 }
                 if (consumerTimes >= minBatchSize && failWorker <= commitFailure) {
                     consumer.commitSync();
-                    LOG.info(Thread.currentThread().getName() + "Commit offset success");
+                    LOG.info(Thread.currentThread().getName() + ": Commit offset success");
                     consumerTimes = 0;
                     failWorker = 0;
                 }

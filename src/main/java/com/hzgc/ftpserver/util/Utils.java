@@ -144,4 +144,27 @@ public class Utils {
         }
         return picType;
     }
+
+    public static String transformNameToKey(String fileName) {
+        StringBuilder finalKey = new StringBuilder("");
+        StringBuilder key = new StringBuilder("");
+        String tempKey;
+        if (null != fileName && fileName.length() > 0) {
+            tempKey = fileName.substring(0, fileName.lastIndexOf("_"));
+            String prefixName = tempKey.substring(tempKey.lastIndexOf("_") + 1, tempKey.length());
+            String timeName = tempKey.substring(0, tempKey.lastIndexOf("_")).replace("_", "");
+            key = key.append(prefixName).reverse();
+            if (prefixName.length() < 10) {
+                for (int i = 0; i < 10 - prefixName.length(); i++) {
+                    key.insert(0, "0");
+                }
+                key.append(timeName);
+            } else {
+                key.append(timeName);
+            }
+        } else {
+            key.append(fileName);
+        }
+        return key.toString();
+    }
 }
